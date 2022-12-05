@@ -1,0 +1,41 @@
+ESTUDIANTES:
+	Alejandro Raúl Hurtado Fuertes
+	Camilo Jené Conde
+
+FICHEROS A ENTREGAR:
+	leeme.txt
+	practica2.py
+	ethernet.py
+	arp.py
+
+ENTREGA:
+	- Normativa de entrega cumplida en su totalidad
+		Realizado: Varias relecturas del enunciado.
+
+	- Recibir tramas Ethernet, realizar comprobaciones y llamar correctamente a la función de callback de nivel superior 
+		Realizado: Comprobado que las interfaces reciben las tramas.
+
+	- Enviar tramas Ethernet correctamente
+		Realizado: Comprobado que las tramas se envían de forma correcta con la interfaz de WireShark.
+
+	- Enviar correctamente peticiones ARP
+		Realizado: Se ha comprobado que se envían las peticiones ARP a las direcciones IP.
+
+	- Procesar correctamente peticiones ARP recibidas
+		Realizado: Comprobado que se reciben de forma correcta las peticiones ARP.
+
+	- Enviar correctamente respuestas ARP
+		Realizado: Se envían las direcciones MAC correspondientes desde las respuestas ARP a las direcciones IP.
+
+	- Procesar correctamente respuestas ARP
+		Realizado: Se procesan de forma correcta las respuestas ARP.
+
+	- Manejo correcto de la caché ARP
+		Realizado: Se almacenan de forma correcta los datos en la caché durante un tiempo determinado.
+
+	- Uso correcto de Locks
+		Realizado: Se utilizan los lock() de forma correcta para evitar el sobreescribimiento de una variable cuando esté siendo utilizada.
+
+	- Realiza correctamente el ARP gratuito
+		Realizado: Se comprueba de forma correcta que no se haya inicializado el ARP desde una dirección IP ya existente. 
+	

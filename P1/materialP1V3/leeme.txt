@@ -1,0 +1,29 @@
+ESTUDIANTES:
+	Alejandro Raúl Hurtado Fuertes
+	Camilo Jené Conde
+
+FICHEROS A ENTREGAR:
+	captura.ens33.1664799173.6779068.pcap
+	leeme.txt
+	practica1.py
+	practica1captura.png
+	rc1_pcap.py
+
+ENTREGA:
+	- Normativa de entrega cumplida en su totalidad
+		Realizado: Varias relecturas del enunciado.
+
+	- Contar paquetes de una traza. 
+		Realizado: Se ha comprobado que el número de paquetes que muestra nuestro programa coincide con el que indica Wireshark.
+
+	- Contar paquetes de la interfaz de red
+		Realizado: Se ha comprobado que el número de paquetes que muestra nuestro programa coincide con el que indica WireShark.
+
+	- Almacenar en una traza el tráfico capturado en vivo
+		Realizado: Se ha comprobado que todos los bytes de la traza capturado coincide con lo que indica Wireshark en un conjunto diverso de paquetes.
+
+	- Modificar fecha correctamente
+		Realizado: Se ha comprobado que las fechas de los paquetes aumentan en 30 minutos por cada paquete.
+
+	- Imprimir los N primeros bytes de un paquete y validarlo con Wireshark (captura de pantalla)
+		Realizado: Se ha comprobado que se imprimen tanto la cantidad indicada de Bytes que se pasan como argumento, como que dichos Bytes coinciden con los bytes que muestra Wireshark.
