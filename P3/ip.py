@@ -21,6 +21,9 @@ IP_MIN_HLEN = 20
 #Tamaño máximo de la cabecera IP
 IP_MAX_HLEN = 60
 
+# Inicializamos el valor IPID al nº de pareja.
+IPID = 
+
 def chksum(msg):
     '''
         Nombre: chksum
@@ -276,7 +279,40 @@ def sendIPDatagram(dstIP,data,protocol):
           
     '''   
     global IPID
+
     ip_header = bytes()
+
+    # Calculamos el tamaño de la cabecera.
+    tamHeaderIP = IP_MIN_HLEN + len(ipOpts) if ipOpts is not None else IP_MIN_HLEN
+
+    if tamHeaderIP > IP_MAX_HLEN:
+        logging.debug("ERROR: el tamaño de la cabecera IP es demasiado grande.")
+        return False
+    
+    # Fragmentación
+    maxDatosUtiles = MTU - tamHeaderIP
+
+    while maxDatosUtiles % 8 != 0: # Comprobamos que la cantidad máxima es múltiplo de 8.
+        maxDatosUtiles -= 1
+
+    # Calculamos el nº de fragmentos a enviar.
+    numFragmentos = len(data) // maxDatosUtiles 
+    
+    if len(data) % maxDatosUtiles == 0: numFragmentos += 1
+
+    # Para cada fragmento realizamos el algoritmo.
+    for fragmento in range(numFragmentos):
+        ip_fragment = bytes()
+
+        version = 0x40 # En nuestro caso siempre es 4 (0100 ----)
+        IHL = tamHeaderIP / 4
+        typeOfService = 0x16
+        totalLength = len(data) - maxDatosUtiles * fragmento
+
+        ip_fragment += (version + IHL).to_bytes(1, "big")
+
+
+    IPID += 1
 
     """
         FRASE PUESTA PARA CUANDO SE DEDICA MI ORDENADOR A BORRAR LA PARTE DEL FINAL 
