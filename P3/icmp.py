@@ -12,8 +12,6 @@ from threading import Lock
 import struct
 
 ICMP_PROTO = 1
-
-
 ICMP_ECHO_REQUEST_TYPE = 8
 ICMP_ECHO_REPLY_TYPE = 0
 
@@ -49,6 +47,33 @@ def process_ICMP_message(us,header,data,srcIp):
         Retorno: Ninguno
           
     '''
+    # Comprobamos si el checksum de data es correcto
+    if chksum(data) != 0:
+        logging.debug("Cheksum != 0: no válido.")
+        return
+
+    # Extraemos el tipo y el codigo de la cabecera ICMP y los imprimimos con logging debug    
+    tipo = struct.unpack('B', data[0])[0]
+    logging.debug("Tipo ICMP: " + str(tipo))
+
+    codigo = struct.unpack('B', data[1])[0]
+    logging.debug("Codigo ICMP: " + str(codigo))
+
+    # Comprobamos el tipo
+    icmp_id = struct.unpack('!H',data[4:6])[0]
+    icmp_seq = struct.unpack('!H',data[6:8])[0]
+
+    if tipo == ICMP_ECHO_REQUEST_TYPE:
+        sendICMPMessage(data, ICMP_ECHO_REPLY_TYPE, 0, icmp_id, icmp_seq, srcIp)
+
+    elif tipo == ICMP_ECHO_REPLY_TYPE:
+        with timeLock:
+            t_dict = icmp_send_times[srcIp + icmp_id + icmp_seq]
+        
+        resta = header.ts.tv_sec - t_dict
+        print("Estimación del RTT: " + str(resta))
+    
+    return
     
 
 def sendICMPMessage(data,type,code,icmp_id,icmp_seqnum,dstIP):
@@ -95,3 +120,6 @@ def initICMP():
         Retorno: Ninguno
           
     '''
+    registerIPProtocol(process_ICMP_message, ICMP_PROTO)
+    
+    return
