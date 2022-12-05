@@ -240,7 +240,7 @@ def initIP(interface,opts=None):
         Retorno: True o False en función de si se ha inicializado el nivel o no
     '''
     global myIP, MTU, netmask, defaultGW,ipOpts
-    
+
     if initARP(interface) == -1:
         return False
 
@@ -319,11 +319,14 @@ def sendIPDatagram(dstIP,data,protocol):
         ip_fragment += (IPID).to_bytes(2, "big") # ip_fragment[4:6]
 
         # Aquí van los flags y el offset.
-        bitReservado = 0
-        DF = 0
-        MF = 0 if fragmento+1 == numFragmentos else 1
-
+        # bitReservado = 0
+        # DF = 0
+        # MF = 0 si último fragmento else 1
+        
+        flags = b'\x00\x00' if fragmento+1 == numFragmentos else b'\x20\x00'
         offset = (maxDatosUtiles * fragmento) // 8
+
+        ip_fragment += flags + offset.to_bytes(2, "big") # COMPROBAR BIEN ESTO
 
 
         timeToLive = 128
