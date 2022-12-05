@@ -347,19 +347,19 @@ def sendIPDatagram(dstIP,data,protocol):
 
         ip_fragment[10:12] = checksum
 
-        #Añadimos el fragmento al datagrama.
-        ip_header += ip_fragment
+        #Añadimos el fragmento ip al datagrama.
+        ip_header = ip_fragment
 
         ip_header += data if numFragmentos == 1 else \
             data[fragmento * maxDatosUtiles : (fragmento + 1) * maxDatosUtiles]
 
-    #Enviamos el datagraga con sendEthernetFrame
-    MACDestino = ARPResolution(dstIP) if (myIP and netmask) == (dstIP and netmask) \
-        else ARPResolution(defaultGW)
+        #Enviamos el datagraga con sendEthernetFrame
+        MACDestino = ARPResolution(dstIP) if (myIP and netmask) == (dstIP and netmask) \
+            else ARPResolution(defaultGW)
 
-    if sendEthernetFrame(ip_header, len(ip_header), ETHERTYPE, MACDestino) == -1:
-        logging.debug("ERROR: sendEthernetFrame() <<< ")
-        return False
+        if sendEthernetFrame(ip_header, len(ip_header), ETHERTYPE, MACDestino) == -1:
+            logging.debug(f"ERROR: sendEthernetFrame() en el fragmento: {fragmento} <<< ")
+            return False
 
     IPID += 1
 
