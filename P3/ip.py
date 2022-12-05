@@ -22,7 +22,10 @@ IP_MIN_HLEN = 20
 IP_MAX_HLEN = 60
 
 # Inicializamos el valor IPID al nº de pareja.
-IPID = 
+IPID = 3
+
+# ETHERTYPE utilizado por defecto.
+ETHERTYPE = 0x0800
 
 def chksum(msg):
     '''
@@ -151,7 +154,8 @@ def process_IP_datagram(us,header,data,srcMac):
     MF = flags & 0x20
     MF = MF >> 5
 
-    offset = X
+    offset = data[6:8]
+    offset = offset << 3
 
     timeToLive = data[8]
     protocol = data[9]; 
@@ -236,9 +240,7 @@ def initIP(interface,opts=None):
         Retorno: True o False en función de si se ha inicializado el nivel o no
     '''
     global myIP, MTU, netmask, defaultGW,ipOpts
-
-    ETHERTYPE = 0x0800
-
+    
     if initARP(interface) == -1:
         return False
 
@@ -306,14 +308,59 @@ def sendIPDatagram(dstIP,data,protocol):
 
         version = 0x40 # En nuestro caso siempre es 4 (0100 ----)
         IHL = tamHeaderIP / 4
+        ip_fragment += (version + IHL).to_bytes(1, "big") # ip_fragment[0]
+
         typeOfService = 0x16
+        ip_fragment += (typeOfService).to_bytes(1, "big") # ip_fragment[1]
+
         totalLength = len(data) - maxDatosUtiles * fragmento
+        ip_fragment += (totalLength).to_bytes(2, "big") # ip_fragment[2:4]
 
-        ip_fragment += (version + IHL).to_bytes(1, "big")
+        ip_fragment += (IPID).to_bytes(2, "big") # ip_fragment[4:6]
 
+        # Aquí van los flags y el offset.
+        bitReservado = 0
+        DF = 0
+        MF = 0 if fragmento+1 == numFragmentos else 1
+
+        offset = (maxDatosUtiles * fragmento) // 8
+
+
+        timeToLive = 128
+        ip_fragment += (timeToLive).to_bytes(1, "big") # ip_fragment[8]
+
+        ip_fragment += (protocol).to_bytes(1, "big") # ip_fragment[9]
+
+        checksum = 0
+        ip_fragment += (checksum).to_bytes(2, "big") # ip_fragment[10:12]
+
+        ip_fragment += (myIP).to_bytes(4, "big") # ip_fragment[12:16]
+        ip_fragment += (dstIP).to_bytes(4, "big") # ip_fragment[16:20]
+
+        if ipOpts is not None: ip_fragment += ipOpts
+
+        # Una vez acabado, calculamos el checksum y lo introducimos en el fragmento.
+        checksum = chksum(ip_fragment)
+
+        ip_fragment[10:12] = checksum
+
+        #Añadimos el fragmento al datagrama.
+        ip_header += ip_fragment
+
+        ip_header += data if numFragmentos == 1 else \
+            data[fragmento * maxDatosUtiles : (fragmento + 1) * maxDatosUtiles]
+
+    #Enviamos el datagraga con sendEthernetFrame
+    MACDestino = ARPResolution(dstIP) if (myIP and netmask) == (dstIP and netmask) \
+        else ARPResolution(defaultGW)
+
+    if sendEthernetFrame(ip_header, len(ip_header), ETHERTYPE, MACDestino) == -1:
+        logging.debug("ERROR: sendEthernetFrame() <<< ")
+        return False
 
     IPID += 1
 
+    return True
     """
         FRASE PUESTA PARA CUANDO SE DEDICA MI ORDENADOR A BORRAR LA PARTE DEL FINAL 
     """
