@@ -110,7 +110,7 @@ def initUDP():
         Retorno: Ninguno
           
     '''
-    logging.debug("Inicializando el nivel UDP.")
+    # logging.debug("Inicializando el nivel UDP.")
     registerIPProtocol(process_UDP_datagram, UDP_PROTO)
 
     return

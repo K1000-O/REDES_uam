@@ -65,7 +65,6 @@ def process_ICMP_message(us,header,data,srcIp):
 
     if tipo == ICMP_ECHO_REQUEST_TYPE:
         sendICMPMessage(data, ICMP_ECHO_REPLY_TYPE, 0, icmp_id, icmp_seq, srcIp)
-
     elif tipo == ICMP_ECHO_REPLY_TYPE:
         with timeLock:
             t_dict = icmp_send_times[srcIp + icmp_id + icmp_seq]
@@ -84,7 +83,7 @@ def sendICMPMessage(data,type,code,icmp_id,icmp_seqnum,dstIP):
             -Si el campo type es ICMP_ECHO_REQUEST_TYPE o ICMP_ECHO_REPLY_TYPE:
                 -Construir la cabecera ICMP
                 -Añadir los datos al mensaje ICMP
-                -Calcular el checksum y añadirlo al mensaje donde corresponda
+                -Calcular el checksum y añadirlo al mensaje donde corresponda (OK)
                 -Si type es ICMP_ECHO_REQUEST_TYPE
                     -Guardar el tiempo de envío (llamando a time.time()) en el diccionario icmp_send_times
                     usando como clave el valor de dstIp+icmp_id+icmp_seqnum
@@ -105,8 +104,31 @@ def sendICMPMessage(data,type,code,icmp_id,icmp_seqnum,dstIP):
         Retorno: True o False en función de si se ha enviado el mensaje correctamente o no
           
     '''
-  
     icmp_message = bytes()
+
+    if type is not ICMP_ECHO_REQUEST_TYPE or type is not ICMP_ECHO_REPLY_TYPE:
+        logging.debug("ERROR: el tipo enviado por ICMP no es soportado.")
+        return False
+
+    # Construimos la cabecera ICMP
+    header = bytearray()
+    header += type.to_bytes(1, "big") + code.to_bytes(1, "big") + b"\x00\x00" \
+        + icmp_id.to_bytes(2, "big") + icmp_seqnum.to_bytes(2, "big")
+
+    # Creamos el datagrama con los datos.
+    icmp_message = bytes()
+    icmp_message += header + data
+
+    # Calculamos el checksum y lo añadimos.
+    checksum = chksum(icmp_message)
+    header[2:4] = checksum  # Al cambiar el header, como su tipo es bytearray() --> Se modifica el datagram.
+
+    if type is ICMP_ECHO_REQUEST_TYPE:
+        with timeLock:
+            icmp_send_times[dstIP + icmp_id + icmp_seqnum] = time.time()
+
+    return sendIPDatagram(dstIP, icmp_message, ICMP_PROTO)
+
    
 def initICMP():
     '''
