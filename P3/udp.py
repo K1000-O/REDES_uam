@@ -50,8 +50,6 @@ def process_UDP_datagram(us,header,data,srcIP):
           
     '''
     # Extraemos los 4 campos de la cabecera UDP que recibimos en data
-        
-        # AQUI NO SE SI HAY QUE HACER EL UNPACK O NO
     src_port = data[0:2]
     dst_port = data[2:4]
     length = data[4:6]
