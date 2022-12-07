@@ -106,7 +106,7 @@ def sendICMPMessage(data,type,code,icmp_id,icmp_seqnum,dstIP):
     '''
     icmp_message = bytes()
 
-    if type is not ICMP_ECHO_REQUEST_TYPE or type is not ICMP_ECHO_REPLY_TYPE:
+    if type is not ICMP_ECHO_REQUEST_TYPE and type is not ICMP_ECHO_REPLY_TYPE:
         logging.debug("ERROR: el tipo enviado por ICMP no es soportado.")
         return False
 
@@ -121,7 +121,7 @@ def sendICMPMessage(data,type,code,icmp_id,icmp_seqnum,dstIP):
 
     # Calculamos el checksum y lo añadimos.
     checksum = chksum(icmp_message)
-    header[2:4] = checksum  # Al cambiar el header, como su tipo es bytearray() --> Se modifica el datagram.
+    header[2:4] = checksum.to_bytes(2, "big")  # Al cambiar el header, como su tipo es bytearray() --> Se modifica el datagram.
 
     if type is ICMP_ECHO_REQUEST_TYPE:
         with timeLock:

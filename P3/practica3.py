@@ -26,6 +26,7 @@ ICMP_ECHO_REQUEST_CODE = 0
 ipTstampOption =	bytes([68,12,13,0x01,10,0,0,3])
 
 if __name__ == "__main__":
+	ICMP_ID = 0
 	ICMP_SEQNUM = 0
 	parser = argparse.ArgumentParser(description='Envía datagramas UDP o mensajes ICMP con diferentes opciones',
 	formatter_class=RawTextHelpFormatter)

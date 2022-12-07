@@ -11,6 +11,9 @@ from ethernet import *
 from arp import *
 from fcntl import ioctl
 import subprocess
+
+import struct
+
 SIOCGIFMTU = 0x8921
 SIOCGIFNETMASK = 0x891b
 #Diccionario de protocolos. Las claves con los valores numéricos de protocolos de nivel superior a IP
@@ -154,7 +157,7 @@ def process_IP_datagram(us,header,data,srcMac):
     MF = flags & 0x20
     MF = MF >> 5
 
-    offset = data[6:8]
+    offset = struct.unpack("!H", data[6:8])[0] & 0x1FFF
     offset = offset << 3
 
     timeToLive = data[8]
@@ -280,7 +283,7 @@ def sendIPDatagram(dstIP,data,protocol):
         Retorno: True o False en función de si se ha enviado el datagrama correctamente o no
           
     '''   
-    global IPID
+    global IPID, myIP, defaultGW, netmask, MTU
 
     ip_header = bytes()
 
@@ -297,17 +300,15 @@ def sendIPDatagram(dstIP,data,protocol):
     while maxDatosUtiles % 8 != 0: # Comprobamos que la cantidad máxima es múltiplo de 8.
         maxDatosUtiles -= 1
 
-    # Calculamos el nº de fragmentos a enviar.
-    numFragmentos = len(data) // maxDatosUtiles 
-    
-    if len(data) % maxDatosUtiles == 0: numFragmentos += 1
+    # Calculamos el nº de fragmentos a enviar.    
+    numFragmentos = len(data) / maxDatosUtiles if len(data) % maxDatosUtiles == 0 else len(data) // maxDatosUtiles + 1
 
     # Para cada fragmento realizamos el algoritmo.
     for fragmento in range(numFragmentos):
-        ip_fragment = bytes()
+        ip_fragment = bytearray()
 
         version = 0x40 # En nuestro caso siempre es 4 (0100 ----)
-        IHL = tamHeaderIP / 4
+        IHL = int(tamHeaderIP / 4)
         ip_fragment += (version + IHL).to_bytes(1, "big") # ip_fragment[0]
 
         typeOfService = 0x16
@@ -322,11 +323,10 @@ def sendIPDatagram(dstIP,data,protocol):
         # bitReservado = 0
         # DF = 0
         # MF = 0 si último fragmento else 1
-        
-        flags = b'\x00\x00' if fragmento+1 == numFragmentos else b'\x20\x00'
-        offset = (maxDatosUtiles * fragmento) // 8
+        flags = 0x0000 if fragmento+1 == numFragmentos else 0x2000
+        offset = int((maxDatosUtiles * fragmento) // 8)
 
-        ip_fragment += flags + offset.to_bytes(2, "big") # COMPROBAR BIEN ESTO
+        ip_fragment += (flags | offset).to_bytes(2, "big") # COMPROBAR BIEN ESTO
 
 
         timeToLive = 128
@@ -339,13 +339,13 @@ def sendIPDatagram(dstIP,data,protocol):
 
         ip_fragment += (myIP).to_bytes(4, "big") # ip_fragment[12:16]
         ip_fragment += (dstIP).to_bytes(4, "big") # ip_fragment[16:20]
-
+        
         if ipOpts is not None: ip_fragment += ipOpts
 
         # Una vez acabado, calculamos el checksum y lo introducimos en el fragmento.
         checksum = chksum(ip_fragment)
 
-        ip_fragment[10:12] = checksum
+        ip_fragment[10:12] = checksum.to_bytes(2, "big")
 
         #Añadimos el fragmento ip al datagrama.
         ip_header = ip_fragment
@@ -354,8 +354,11 @@ def sendIPDatagram(dstIP,data,protocol):
             data[fragmento * maxDatosUtiles : (fragmento + 1) * maxDatosUtiles]
 
         #Enviamos el datagraga con sendEthernetFrame
-        MACDestino = ARPResolution(dstIP) if (myIP and netmask) == (dstIP and netmask) \
+        MACDestino = ARPResolution(dstIP) if (myIP & netmask) == (dstIP & netmask) \
             else ARPResolution(defaultGW)
+
+        if MACDestino is None:
+            return False
 
         if sendEthernetFrame(ip_header, len(ip_header), ETHERTYPE, MACDestino) == -1:
             logging.debug(f"ERROR: sendEthernetFrame() en el fragmento: {fragmento} <<< ")
