@@ -25,7 +25,7 @@ ENTREGA:
 		Realizado: Se ha comprobado enviando un ping desde h1 a h2 y viendo que en el Wireshark el protocolo recibido es ICMP(1).
 
 	- Enviar y recibir correctamente mensajes ICMP con opciones IP 
-		Realizado: Comprobado como anteriormente, pero enviando el script con --addOptions.
+		Realizado: Comprobado como anteriormente, pero enviando el script con --addOptions la terminal lo recibe de forma correcta.
 
 	- Enviar datagramas UDP con fragmentación
 		Realizado: Se envían los datagramas de forma correcta cuando el tamaño es mayor al MTU. Se comprueba viendo los bits MF y el offset.
