@@ -50,18 +50,18 @@ def process_ICMP_message(us,header,data,srcIp):
     # Comprobamos si el checksum de data es correcto
     if chksum(data) != 0:
         logging.debug("Cheksum != 0: no válido.")
-        return
+        #return
 
     # Extraemos el tipo y el codigo de la cabecera ICMP y los imprimimos con logging debug    
-    tipo = struct.unpack('B', data[0])[0]
+    tipo = data[0]
     logging.debug("Tipo ICMP: " + str(tipo))
 
-    codigo = struct.unpack('B', data[1])[0]
+    codigo = data[1]
     logging.debug("Codigo ICMP: " + str(codigo))
 
     # Comprobamos el tipo
-    icmp_id = struct.unpack('!H',data[4:6])[0]
-    icmp_seq = struct.unpack('!H',data[6:8])[0]
+    icmp_id = data[4:6]
+    icmp_seq = data[6:8]
 
     if tipo == ICMP_ECHO_REQUEST_TYPE:
         sendICMPMessage(data, ICMP_ECHO_REPLY_TYPE, 0, icmp_id, icmp_seq, srcIp)
@@ -112,8 +112,13 @@ def sendICMPMessage(data,type,code,icmp_id,icmp_seqnum,dstIP):
 
     # Construimos la cabecera ICMP
     header = bytearray()
-    header += type.to_bytes(1, "big") + code.to_bytes(1, "big") + b"\x00\x00" \
-        + icmp_id.to_bytes(2, "big") + icmp_seqnum.to_bytes(2, "big")
+    header += type.to_bytes(1, "big") + code.to_bytes(1, "big") + b"\x00\x00"
+    
+    if isinstance(icmp_id, int):
+        header += icmp_id.to_bytes(2, "big") + icmp_seqnum.to_bytes(2, "big")
+    else:
+        header += icmp_id + icmp_seqnum
+        
 
     # Creamos el datagrama con los datos.
     icmp_message = bytes()

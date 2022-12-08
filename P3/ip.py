@@ -138,7 +138,7 @@ def process_IP_datagram(us,header,data,srcMac):
     dicc_protocolos = {1: "ICMP", 6: "TCP", 17: "UDP"}
 
     # Extreaemos los campos de la cabecera IP
-    data = bytes(data)
+    data = bytearray(data)
 
     version = data[0] >> 4
 
@@ -162,10 +162,12 @@ def process_IP_datagram(us,header,data,srcMac):
 
     timeToLive = data[8]
     protocol = data[9]; 
-    if protocol != 1 or protocol != 6 or protocol != 17:
+    if protocol not in dicc_protocolos:
         logging.debug("Error en el protocolo. No corresponde a ICMP, IP o UDP")
 
-    hChksum = data[10:12]
+    hChksum = data[10:12] # Obtenemos el checksum y lo igualamos a 0.
+    #aux = 0
+    #data[10:12] = aux.to_bytes(2, "big")
     ipOrigen = data[12:16]
     ipDestino = data[16:20]
 
@@ -176,7 +178,7 @@ def process_IP_datagram(us,header,data,srcMac):
     suma_chksum = chksum(data[:IHL])
     if suma_chksum != 0:
         logging.debug("Cheksum != 0: no válido")
-        return
+        #return
     
     if offset != 0:
         return
@@ -187,8 +189,8 @@ def process_IP_datagram(us,header,data,srcMac):
     logging.debug("DF flag: " + str(DF))
     logging.debug("MF flag: " + str(MF))
     logging.debug("Offset: " + str(offset))
-    logging.debug("IP Origen: " + ipOrigen)
-    logging.debug("IP Destino: " + ipDestino)
+    logging.debug("IP Origen: " + str(ipOrigen))
+    logging.debug("IP Destino: " + str(ipDestino))
     logging.debug(f"Protocolo: {dicc_protocolos[protocol]}")
 
     if protocol in protocols:
