@@ -35,3 +35,5 @@ ENTREGA:
 
 	- Enviar datagramas UDP fuera de la subred actual 
 		Realizado: Comprobado enviando datagramas a 8.8.8.8 y viendo que en el Wireshark la MACdestino por la que se pregunta es 10.0.0.3.
+
+	En todos los casos, se comprueba con el logging.debug que los datagramas pasados son los correctos. Lo único, que el calculo del checksum no se realiza correctamente...

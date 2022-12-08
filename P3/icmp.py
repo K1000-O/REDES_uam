@@ -60,14 +60,14 @@ def process_ICMP_message(us,header,data,srcIp):
     logging.debug("Codigo ICMP: " + str(codigo))
 
     # Comprobamos el tipo
-    icmp_id = data[4:6]
-    icmp_seq = data[6:8]
+    icmp_id = struct.unpack('!H',data[4:6])[0]
+    icmp_seq = struct.unpack('!H',data[4:6])[0]
 
     if tipo == ICMP_ECHO_REQUEST_TYPE:
         sendICMPMessage(data, ICMP_ECHO_REPLY_TYPE, 0, icmp_id, icmp_seq, srcIp)
     elif tipo == ICMP_ECHO_REPLY_TYPE:
         with timeLock:
-            t_dict = icmp_send_times[srcIp + icmp_id + icmp_seq]
+            t_dict = icmp_send_times[int.from_bytes(srcIp, "big") + icmp_id + icmp_seq]
         
         resta = header.ts.tv_sec - t_dict
         print("Estimación del RTT: " + str(resta))
@@ -112,13 +112,8 @@ def sendICMPMessage(data,type,code,icmp_id,icmp_seqnum,dstIP):
 
     # Construimos la cabecera ICMP
     header = bytearray()
-    header += type.to_bytes(1, "big") + code.to_bytes(1, "big") + b"\x00\x00"
-    
-    if isinstance(icmp_id, int):
-        header += icmp_id.to_bytes(2, "big") + icmp_seqnum.to_bytes(2, "big")
-    else:
-        header += icmp_id + icmp_seqnum
-        
+    header += type.to_bytes(1, "big") + code.to_bytes(1, "big") + b"\x00\x00" \
+        + icmp_id.to_bytes(2, "big") + icmp_seqnum.to_bytes(2, "big")
 
     # Creamos el datagrama con los datos.
     icmp_message = bytes()

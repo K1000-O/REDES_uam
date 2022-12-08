@@ -340,7 +340,12 @@ def sendIPDatagram(dstIP,data,protocol):
         ip_fragment += (checksum).to_bytes(2, "big") # ip_fragment[10:12]
 
         ip_fragment += (myIP).to_bytes(4, "big") # ip_fragment[12:16]
-        ip_fragment += (dstIP).to_bytes(4, "big") # ip_fragment[16:20]
+
+        if isinstance(dstIP, int):
+            ip_fragment += (dstIP).to_bytes(4, "big")
+        else:
+            ip_fragment += dstIP 
+            dstIP = int.from_bytes(dstIP, "big")
         
         if ipOpts is not None: ip_fragment += ipOpts
 
